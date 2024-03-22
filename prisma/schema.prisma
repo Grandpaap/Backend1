@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int        @id @default(autoincrement())
+  email          String     @unique
+  name           String
+  password       String
+  role           Role       @default(USER)
+  photos         Photo[]
+  messagesSent   Message[]  @relation("sentMessages")
+  messagesReceived Message[] @relation("receivedMessages")
+  profileImg     String?
+  videoCalls     VideoCall[]
+  memberships    GroupMembership[]
+  groups         Group[]         @relation
+  groupMessages  GroupMessage[]  @relation
+}
+
+model Group {
+  id          Int        @id @default(autoincrement())
+  name        String
+  members     User[]     @relation
+  messages    GroupMessage[]
+   memberships GroupMembership[]
+    photos Photo[]   
+}
+
+model GroupMembership {
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int
+  group    Group   @relation(fields: [groupId], references: [id])
+  groupId  Int
+}
+
+model GroupMessage {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  sender     User      @relation(fields: [senderId], references: [id])
+  senderId   Int
+  group      Group     @relation(fields: [groupId], references: [id])
+  groupId    Int
+  content    String
+}
+
+model Message {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  sender     User      @relation(name: "sentMessages", fields: [senderId], references: [id])
+  senderId   Int
+  recipient  User      @relation(name: "receivedMessages", fields: [recipientId], references: [id])
+  recipientId Int
+  content    String
+}
+
+
+model Photo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  photoURL  String  
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+   group     Group?   @relation(fields: [groupId], references: [id])
+  groupId   Int?
+}
+
+model VideoCall {
+  id        Int       @id @default(autoincrement())
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  participants User[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}

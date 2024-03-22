@@ -5,9 +5,6 @@ const prisma = new PrismaClient();
 const photoRouter = express.Router();
 const jwt = require("jsonwebtoken");
 
-// https://stackoverflow.com/questions/53629658/include-path-and-invalid-escape-character-in-vs-code
-
-// this website gives solution to fix file path /\ weirdness
 
 photoRouter.get("/", async (req, res, next) => {
   try {
@@ -45,10 +42,12 @@ photoRouter.post("/", async (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, "secret");
     const userId = decoded.id;
+    const { title, photoURL, groupId } = req.body;
     const photo = await prisma.photo.create({
       data: {
-        title: req.body.title,
-        fileName: req.body.fileName,
+        title,
+        photoURL,
+        group: { connect: { id: parseInt(groupId) } },
         user: { connect: { id: parseInt(userId) } },
       },
     });
