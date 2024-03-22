@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
+const jwt = require("jsonwebtoken");
 // Get all group messages
 
 router.get("/", async (req, res, next) => {
@@ -38,9 +38,13 @@ router.get("/:id", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const { senderId, groupId, content } = req.body;
-    console.log("senderId:", senderId);
-    console.log("groupId:", groupId);
+
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, "secret");
+    const senderId = decoded.id;
+
+    const { groupId, content } = req.body;
+
     const groupMessage = await prisma.groupMessage.create({
       data: {
         sender: { connect: { id: parseInt(senderId) } },

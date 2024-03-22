@@ -3,7 +3,7 @@ const router = require("express").Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const usersRouter = express.Router();
-
+const jwt = require('jsonwebtoken');
 // Deny access if user is not logged in
 // usersRouter.use((req, res, next) => {
 //   if (!req.user) {
@@ -43,6 +43,30 @@ usersRouter.get("/:id", async (req, res, next) => {
   }
 });
 
+//user by token expirement
+usersRouter.get("/me", async (req, res, next) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, "secret");
+    const userId = decoded.id;
+    console.log("Decoded userId:", userId);
+
+    const user = await prisma.user.findFirst({
+      where: {
+        id: parseInt(userId),
+      },
+    });
+
+    if (!user) {
+      return res.status(404).send("User not found.");
+    }
+
+    res.send(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    next(error);
+  }
+});
 // Create a new user
 
 usersRouter.post("/", async (req, res, next) => {

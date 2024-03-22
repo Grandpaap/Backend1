@@ -55,13 +55,16 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-//get membership should change to by group id
+//get membership should change to by group id posible change again later to make one call betweein all members and one
 
 router.get("/:id", async (req, res, next) => {
   try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, "secret");
+    const userId = decoded.id;
     const groupMembership = await prisma.groupMembership.findFirst({
       where: {
-        id: parseInt(req.params.id),
+        userId: { connect: { id: parseInt(userId) } },
       },
     });
 
